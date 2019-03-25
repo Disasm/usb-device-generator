@@ -1,0 +1,10 @@
+[package]
+name = "usb-device-generator"
+version = "0.1.0"
+authors = ["disasm"]
+edition = "2018"
+
+[dependencies]
+usb-device = "0.2.0"
+failure = "0.1.5"
+bit_field = "0.9.0"
