@@ -348,21 +348,26 @@ impl EndpointBuilder {
     }
 
     pub fn number(mut self, number: u8) -> Self {
+        assert!(number < 16);
+        assert!(self.number.is_none());
         self.number = Some(number);
         self
     }
 
     pub fn direction(mut self, direction: UsbDirection) -> Self {
+        assert!(self.direction.is_none());
         self.direction = Some(direction);
         self
     }
 
     pub fn ep_type(mut self, ep_type: EndpointType) -> Self {
+        assert!(self.ep_type.is_none());
         self.ep_type = Some(ep_type);
         self
     }
 
     pub fn max_packet_size(mut self, max_packet_size: u16) -> Self {
+        assert!(self.max_packet_size.is_none());
         self.max_packet_size = Some(max_packet_size);
         self
     }
