@@ -1,9 +1,10 @@
 pub use usb_device::UsbDirection;
 pub use usb_device::endpoint::{EndpointType, EndpointAddress};
 pub mod builder;
-pub mod usb;
-pub mod generator;
 pub mod cdc;
+pub mod endpoint;
+pub mod generator;
+pub mod usb;
 
 
 pub trait EndpointInfo {
