@@ -24,6 +24,7 @@ pub fn calculate_count_rx(mut size: u16) -> Result<(u16, u16), Error> {
     }
 }
 
+#[derive(Clone, Copy)]
 struct EndpointMemoryAllocation {
     address: u16,
     size: u16,
@@ -256,5 +257,88 @@ pub trait DeviceBuilderEx {
 impl DeviceBuilderEx for DeviceBuilder {
     fn allocate(self, allocator: &mut DeviceAllocator) -> Self {
         allocator.allocate_ep0_from_builfer(self).unwrap()
+    }
+}
+
+pub struct TargetEndpointConfiguration {
+    pub ep_address: u8,
+    pub ep_type: EndpointType,
+    pub tx_enabled: bool,
+    pub rx_enabled: bool,
+    pub double_buffered: bool,
+    pub buffer_descriptor_offset_bytes: u16,
+    pub buffer_descriptor_data: [u16; 4],
+    pub buffer0_offset_words: u16,
+    pub buffer1_offset_words: u16,
+    pub buffer0_size_words: u16,
+    pub buffer1_size_words: u16,
+}
+
+fn create_buffer_descriptor(mem: Option<EndpointMemoryAllocation>, is_rx: bool) -> (u16, u16, u16, u16) {
+    let offset_words;
+    let size_words;
+    let address;
+    let count;
+    if let Some(mem) = mem {
+        offset_words = mem.address >> 1;
+        address = mem.address;
+        size_words = mem.size >> 1;
+
+        if is_rx {
+            let (size, bits) = calculate_count_rx(mem.size).unwrap();
+            assert_eq!(size, mem.size);
+            count = bits;
+        } else {
+            count = 0;
+        }
+    } else {
+        offset_words = 0;
+        size_words = 0;
+        address = 0;
+        count = 0;
+    }
+    (offset_words, size_words, address, count)
+}
+
+impl From<EndpointAllocation> for TargetEndpointConfiguration {
+    fn from(ep: EndpointAllocation) -> Self {
+        assert!(ep.address_index < 16);
+        /*let ep_type = match ep.ep_type {
+            EndpointType::Control => 0b01,
+            EndpointType::Isochronous => 0b10,
+            EndpointType::Bulk => 0b00,
+            EndpointType::Interrupt => 0b11,
+        };*/
+        let (buffer0_offset_words, buffer0_size_words, buffer0_addr, buffer0_count) =
+            create_buffer_descriptor(ep.buffers[0], ep.double_buffered && ep.rx_enabled);
+        let (buffer1_offset_words, buffer1_size_words, buffer1_addr, buffer1_count) =
+            create_buffer_descriptor(ep.buffers[1], ep.rx_enabled);
+        TargetEndpointConfiguration {
+            ep_address: ep.address_index,
+            ep_type: ep.ep_type,
+            tx_enabled: ep.tx_enabled,
+            rx_enabled: ep.rx_enabled,
+            double_buffered: ep.double_buffered,
+            buffer_descriptor_offset_bytes: ep.buffer_descriptor.address,
+            buffer_descriptor_data: [buffer0_addr, buffer0_count, buffer1_addr, buffer1_count],
+            buffer0_offset_words,
+            buffer1_offset_words,
+            buffer0_size_words,
+            buffer1_size_words,
+        }
+    }
+}
+
+pub struct TargetDeviceConfiguration {
+    pub buffer_table_address: u16,
+    pub endpoints: Vec<TargetEndpointConfiguration>,
+}
+
+impl From<DeviceAllocator> for TargetDeviceConfiguration {
+    fn from(dev: DeviceAllocator) -> Self {
+        TargetDeviceConfiguration {
+            buffer_table_address: 0,
+            endpoints: dev.endpoints.into_iter().map(|ep| TargetEndpointConfiguration::from(ep)).collect(),
+        }
     }
 }
