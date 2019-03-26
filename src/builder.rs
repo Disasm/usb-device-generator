@@ -382,8 +382,7 @@ impl EndpointBuilder {
             address: EndpointAddress::from_parts(
                 self.number.unwrap() as usize,
                 self.direction.unwrap(),
-            )
-            .into(),
+            ),
             attributes: self.ep_type.unwrap() as u8,
             max_packet_size: self.max_packet_size.unwrap(),
             interval: self.interval,

@@ -1,3 +1,5 @@
+use usb_device::endpoint::EndpointAddress;
+
 /// Standard descriptor types
 pub enum UsbDescriptorType {
     Device = 1,
@@ -41,7 +43,7 @@ pub struct UsbInterfaceDescriptor {
 
 #[derive(Clone, Debug)]
 pub struct UsbEndpointDescriptor {
-    pub address: u8,
+    pub address: EndpointAddress,
     pub attributes: u8,
     pub max_packet_size: u16,
     pub interval: u8,
@@ -208,7 +210,7 @@ impl UsbDescriptorWriter {
         self.write(
             UsbDescriptorType::Endpoint as u8,
             &[
-                endpoint.address,    // bEndpointAddress
+                endpoint.address.into(), // bEndpointAddress
                 endpoint.attributes, // bmAttributes
                 mps as u8,
                 (mps >> 8) as u8,  // wMaxPacketSize
