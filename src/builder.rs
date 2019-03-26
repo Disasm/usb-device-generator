@@ -26,6 +26,7 @@ macro_rules! generate_field_setters {
 
 #[derive(Debug)]
 pub struct DeviceConfig {
+    pub ep0_max_packet_size: u8,
     pub device_descriptor: Vec<u8>,
     pub configuration_descriptor: Vec<u8>,
     pub string_descriptors: HashMap<u8, Vec<u8>>,
@@ -270,6 +271,7 @@ impl DeviceBuilder {
         }
 
         DeviceConfig {
+            ep0_max_packet_size: self.descriptor.max_packet_size_0,
             device_descriptor,
             configuration_descriptor,
             string_descriptors,

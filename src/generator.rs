@@ -64,6 +64,13 @@ impl<B: UsbBus> DescriptorProvider<B> for GeneratedDevice {
             _ => xfer.reject(),
         }
     }
+
+    fn get_ep0_max_packet_size() -> u8 {
+"#
+        )?;
+        writeln!(f, "{}", self.usb_config.ep0_max_packet_size)?;
+        writeln!(f, "{}", r#"
+    }
 }"#
         )?;
 
