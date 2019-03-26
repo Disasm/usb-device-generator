@@ -205,7 +205,6 @@ impl DeviceBuilder {
         for interface in &self.interfaces {
             str_alloc.alloc(&interface.descriptor.interface_string);
         }
-        str_alloc.alloc(&UsbString::Custom(42));
 
         // Generate device descriptor
         let mut w = UsbDescriptorWriter::new();
