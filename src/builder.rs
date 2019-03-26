@@ -352,33 +352,13 @@ impl EndpointBuilder {
         self
     }
 
-    pub fn input(mut self) -> Self {
-        self.direction = Some(UsbDirection::In);
+    pub fn direction(mut self, direction: UsbDirection) -> Self {
+        self.direction = Some(direction);
         self
     }
 
-    pub fn output(mut self) -> Self {
-        self.direction = Some(UsbDirection::Out);
-        self
-    }
-
-    pub fn control(mut self) -> Self {
-        self.ep_type = Some(EndpointType::Control);
-        self
-    }
-
-    pub fn bulk(mut self) -> Self {
-        self.ep_type = Some(EndpointType::Bulk);
-        self
-    }
-
-    pub fn interrupt(mut self) -> Self {
-        self.ep_type = Some(EndpointType::Interrupt);
-        self
-    }
-
-    pub fn isochronous(mut self) -> Self {
-        self.ep_type = Some(EndpointType::Isochronous);
+    pub fn ep_type(mut self, ep_type: EndpointType) -> Self {
+        self.ep_type = Some(ep_type);
         self
     }
 
