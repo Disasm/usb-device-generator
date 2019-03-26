@@ -1,5 +1,8 @@
 use usb_device::endpoint::EndpointAddress;
 
+/// Maximum number of endpoints in one direction. Specified by the USB specification.
+pub const USB_MAX_ENDPOINTS: usize = 16;
+
 /// Standard descriptor types
 pub enum UsbDescriptorType {
     Device = 1,

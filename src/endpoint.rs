@@ -2,7 +2,7 @@ use usb_device::UsbDirection;
 use failure::{Error, bail, err_msg};
 use usb_device::endpoint::EndpointType;
 use crate::builder::{EndpointBuilder, DeviceBuilder};
-use usb_device::device::MAX_ENDPOINTS;
+use crate::usb::USB_MAX_ENDPOINTS;
 
 pub fn calculate_count_rx(mut size: u16) -> Result<(u16, u16), Error> {
     if size <= 62 {
@@ -115,7 +115,7 @@ impl DeviceAllocator {
     }
 
     fn get_free_address_index(&self) -> Result<u8, Error> {
-        for index in 1..MAX_ENDPOINTS {
+        for index in 1..USB_MAX_ENDPOINTS {
             if !self.endpoints.iter().any(|ep| ep.address_index == index as u8) {
                 return Ok(index as u8);
             }
