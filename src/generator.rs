@@ -6,9 +6,11 @@ use failure::Error;
 use std::path::Path;
 use crate::usb::UsbEndpointDescriptor;
 use crate::EndpointInfo;
+use crate::endpoint::TargetDeviceConfiguration;
 
 struct TargetDeviceConfig {
     usb_config: DeviceConfig,
+    device_config: TargetDeviceConfiguration,
 }
 
 impl TargetDeviceConfig {
@@ -62,9 +64,35 @@ impl<B: UsbBus> DescriptorProvider<B> for GeneratedDevice {
     fn write_endpoint_configuration(&self, f: &mut fmt::Formatter) -> fmt::Result {
         writeln!(f, "{}", r#"
 use ::stm32f103xx_usb::endpoint::{Endpoint, EndpointConfiguration};
+use ::usb_device::endpoint::EndpointType;
 impl EndpointConfiguration for GeneratedDevice {
-    fn configure_endpoints(_endpoints: &mut [Endpoint]) {"#
+    fn configure_endpoints(endpoints: &mut [Endpoint]) {"#
         )?;
+
+        for (i, ep) in self.device_config.endpoints.iter().enumerate() {
+            let prefix = format!("endpoints[{}]", i);
+
+            assert_eq!(i, ep.ep_address as usize); // TODO: set endpoint address
+            writeln!(f, "{}.set_ep_type(EndpointType::{:?});", prefix, ep.ep_type)?;
+
+            if !ep.double_buffered {
+                if ep.buffer0_size_words != 0 {
+                    writeln!(f, "{}.set_in_buf(0x{:x}, 0x{:x});", prefix,
+                             ep.buffer0_offset_words << 1,
+                             ep.buffer0_size_words << 1)?;
+                }
+                if ep.buffer1_size_words != 0 {
+                    writeln!(f, "{}.set_out_buf(0x{:x}, (0x{:x}, 0x{:x}));", prefix,
+                             ep.buffer1_offset_words << 1,
+                             ep.buffer1_size_words << 1,
+                             ep.buffer_descriptor_data[3])?;
+                }
+            } else {
+                panic!("Double-buffered endpoints are not supported yet");
+            }
+
+            writeln!(f)?;
+        }
 
         writeln!(f, "{}", r#"
     }
@@ -90,10 +118,11 @@ impl Display for TargetDeviceConfig {
     }
 }
 
-pub fn generate_file(filename: impl AsRef<Path>, usb_config: DeviceConfig) -> Result<(), Error> {
+pub fn generate_file(filename: impl AsRef<Path>, usb_config: DeviceConfig, device_config: TargetDeviceConfiguration) -> Result<(), Error> {
     let mut file = fs::File::create(filename)?;
     let config = TargetDeviceConfig {
         usb_config,
+        device_config,
     };
     write!(file, "{}", config)?;
     Ok(())
