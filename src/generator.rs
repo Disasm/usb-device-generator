@@ -27,14 +27,26 @@ impl TargetDeviceConfig {
         writeln!(f, "{}", r#"
 pub struct GeneratedDevice;
 
-use ::usb_device::{Result, bus::UsbBus, device::{DescriptorProvider, CustomStringDescriptorProvider}, class::ControlIn};
+use ::usb_device::{Result, UsbError, bus::UsbBus, device::{DescriptorProvider, CustomStringDescriptorProvider}, class::ControlIn};
 impl<B: UsbBus> DescriptorProvider<B> for GeneratedDevice {
-    fn get_device_descriptor() -> &'static [u8] {
-        &DEVICE_DESCRIPTOR
+    fn get_device_descriptor(buffer: &mut [u8]) -> Result<usize> {
+        let n = DEVICE_DESCRIPTOR.len();
+        if buffer.len() < n {
+            Err(UsbError::BufferOverflow)
+        } else {
+            buffer[..n].copy_from_slice(&DEVICE_DESCRIPTOR);
+            Ok(n)
+        }
     }
 
-    fn get_configuration_descriptor() -> &'static [u8] {
-        &CONFIGURATION_DESCRIPTOR
+    fn get_configuration_descriptor(buffer: &mut [u8]) -> Result<usize> {
+        let n = CONFIGURATION_DESCRIPTOR.len();
+        if buffer.len() < n {
+            Err(UsbError::BufferOverflow)
+        } else {
+            buffer[..n].copy_from_slice(&CONFIGURATION_DESCRIPTOR);
+            Ok(n)
+        }
     }
 
     fn get_string_descriptor(_lang_id: u16, index: u8, xfer: ControlIn<B>) -> Result<()> {
