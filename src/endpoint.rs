@@ -2,7 +2,8 @@ use usb_device::UsbDirection;
 use failure::{Error, bail, err_msg};
 use usb_device::endpoint::EndpointType;
 use crate::builder::{EndpointBuilder, DeviceBuilder};
-use crate::usb::USB_MAX_ENDPOINTS;
+use crate::usb::{USB_MAX_ENDPOINTS, UsbEndpointDescriptor};
+use crate::EndpointInfo;
 
 pub fn calculate_count_rx(mut size: u16) -> Result<(u16, u16), Error> {
     if size <= 62 {
@@ -234,19 +235,35 @@ impl DeviceAllocator {
     }
 }
 
-pub trait EndpointBuilderEx {
-    fn allocate(self, allocator: &mut DeviceAllocator) -> Self;
+pub struct DeviceEndpoint {
+    descriptor: UsbEndpointDescriptor,
+}
 
-    fn allocate_double_buffered(self, allocator: &mut DeviceAllocator) -> Self;
+impl EndpointInfo for DeviceEndpoint {
+    fn descriptor(&self) -> &UsbEndpointDescriptor {
+        &self.descriptor
+    }
+}
+
+pub trait EndpointBuilderEx {
+    fn allocate(self, allocator: &mut DeviceAllocator) -> DeviceEndpoint;
+
+    fn allocate_double_buffered(self, allocator: &mut DeviceAllocator) -> DeviceEndpoint;
 }
 
 impl EndpointBuilderEx for EndpointBuilder {
-    fn allocate(self, allocator: &mut DeviceAllocator) -> Self {
-        allocator.allocate_from_builder(self, false).unwrap()
+    fn allocate(self, allocator: &mut DeviceAllocator) -> DeviceEndpoint {
+        let descriptor = allocator.allocate_from_builder(self, false).unwrap().build();
+        DeviceEndpoint {
+            descriptor,
+        }
     }
 
-    fn allocate_double_buffered(self, allocator: &mut DeviceAllocator) -> Self {
-        allocator.allocate_from_builder(self, true).unwrap()
+    fn allocate_double_buffered(self, allocator: &mut DeviceAllocator) -> DeviceEndpoint {
+        let descriptor = allocator.allocate_from_builder(self, true).unwrap().build();
+        DeviceEndpoint {
+            descriptor,
+        }
     }
 }
 

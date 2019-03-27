@@ -1,11 +1,9 @@
-use crate::builder::{DeviceConfig, EndpointBuilder};
+use crate::builder::DeviceConfig;
 use std::{fmt, fs};
 use std::io::Write;
 use std::fmt::Display;
 use failure::Error;
 use std::path::Path;
-use crate::usb::UsbEndpointDescriptor;
-use crate::EndpointInfo;
 use crate::endpoint::TargetDeviceConfiguration;
 
 struct TargetDeviceConfig {
@@ -145,22 +143,4 @@ pub fn generate_file(filename: impl AsRef<Path>, usb_config: DeviceConfig, devic
     };
     write!(file, "{}", config)?;
     Ok(())
-}
-
-pub struct DeviceEndpoint {
-    descriptor: UsbEndpointDescriptor,
-}
-
-impl EndpointInfo for DeviceEndpoint {
-    fn descriptor(&self) -> &UsbEndpointDescriptor {
-        &self.descriptor
-    }
-}
-
-impl From<EndpointBuilder> for DeviceEndpoint {
-    fn from(builder: EndpointBuilder) -> Self {
-        DeviceEndpoint {
-            descriptor: builder.build()
-        }
-    }
 }
